@@ -1,0 +1,18 @@
+# Minimal runtime deps for the Depth Model API (Azure Container Apps)
+flask>=3.0.0
+flask-cors>=4.0.0
+gunicorn>=21.2.0
+numpy>=1.24.0
+opencv-python-headless>=4.9.0.80
+pillow>=10.0.0
+pyyaml>=6.0.1
+python-dotenv>=1.0.1
+requests>=2.31.0
+flask-swagger-ui>=4.11.1
+
+timm>=0.9.12
+# Torch is required by the model code. CPU wheels are typically used in Linux containers.
+torch>=2.1.0
+
+# Apple ML Depth Pro (installs the `depth_pro` package)
+git+https://github.com/apple/ml-depth-pro.git

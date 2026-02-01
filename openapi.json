@@ -1,0 +1,50 @@
+{
+  "openapi": "3.0.3",
+  "info": { "title": "Depth Estimation API", "version": "1.0.0" },
+  "servers": [{ "url": "/" }],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health check",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/model_info": {
+      "get": {
+        "summary": "Model metadata",
+        "security": [{ "ApiKeyAuth": [] }],
+        "responses": { "200": { "description": "OK" }, "401": { "description": "Unauthorized" } }
+      }
+    },
+    "/estimate_depth": {
+      "post": {
+        "summary": "Estimate depth",
+        "security": [{ "ApiKeyAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "image_base64": { "type": "string" }
+                },
+                "required": ["image_base64"]
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "OK" }, "401": { "description": "Unauthorized" } }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key"
+      }
+    }
+  }
+}
