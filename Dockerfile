@@ -24,8 +24,6 @@ RUN pip install --no-cache-dir -r requirements.api.txt
 COPY depth_service.py /app/
 COPY openapi.json /app/
 COPY src/ /app/src/
-COPY config.yaml /app/
-
 
 # Create mount point for Azure Files
 # (the Azure Files volume will be mounted here at runtime)
