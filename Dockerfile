@@ -19,6 +19,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.api.txt ./requirements.api.txt
 RUN pip uninstall -y depth_pro depth-pro || true
 RUN pip install --no-cache-dir -r requirements.api.txt
+RUN pip uninstall -y depth_pro depth-pro || true
 
 # Copy app code only (no model artifacts)
 COPY depth_service.py /app/
