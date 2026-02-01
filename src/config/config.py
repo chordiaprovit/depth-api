@@ -1,50 +1,54 @@
-
 import os
-from typing import Any
-from dotenv import load_dotenv
+from typing import Any, Dict, Optional
+
 import yaml
 
+# Local-dev only: don't fail if python-dotenv isn't installed in prod
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except Exception:
+    pass
+
 from src.models.ml_depth_pro import MlDepthPro
-from src.models.midas import DepthEstimator
 
-
-# Load .env file into environment variables
-load_dotenv()
-
-# Access variables from environment
-endpoint = os.getenv("ENDPOINT")
-api_key = os.getenv("API_KEY")
-model_name = os.getenv("MODEL_NAME")
-
-depth_model_name_to_class_mapping = {
-    "ml_depth_pro": MlDepthPro,
-    "midas": DepthEstimator
-}
 
 def load_config(config_path: str) -> Any:
-    """
-    Safely reads yaml files and returns the resulting Python object
-
-    :param config_path: path of the config file to load.
-    :return: resulting python object after yaml read.
-    """
+    if not config_path or not os.path.exists(config_path):
+        return None
     with open(file=config_path, mode="r", encoding="utf-8") as conf_file:
         return yaml.safe_load(conf_file)
-    
-def get_depth_model(config: Any, model_path: str | None = None) -> Any:
-    """Creates depth model config and instantiates the model class"""
-    model_config = config["depth_model"]
-    name = model_config["name"]
-    device = model_config["device"]
-    model_params = model_config.get("params", {}).copy()
 
-    # Allow runtime override (Azure Files mount)
-    if model_path:
-        model_params["model_path"] = model_path
+def get_depth_model(config: Optional[Dict[str, Any]] = None, model_path: str | None = None) -> Any:
+    """
+    Create and return the depth model.
 
-    if name in depth_model_name_to_class_mapping:
-        return depth_model_name_to_class_mapping[name](device=device, **model_params)
+    Priority:
+    1) ACA env vars (MODEL_TYPE, DEVICE, MODEL_PATH)
+    2) config.yaml (if provided)
+    """
+    # --- Defaults from env (ACA-friendly) ---
+    name = (os.getenv("MODEL_TYPE") or "ml_depth_pro").strip()
+    device = (os.getenv("DEVICE") or "cpu").strip()
+    effective_model_path = model_path or os.getenv("MODEL_PATH")
+
+    model_params: Dict[str, Any] = {}
+    if effective_model_path:
+        model_params["model_path"] = effective_model_path
+
+    # --- Override from config file if present ---
+    if config and isinstance(config, dict) and "depth_model" in config:
+        model_config = config["depth_model"] or {}
+        name = model_config.get("name", name)
+        device = model_config.get("device", device)
+        model_params.update((model_config.get("params") or {}).copy())
+
+        # Allow runtime override (Azure Files mount)
+        if effective_model_path:
+            model_params["model_path"] = effective_model_path
+
+    # --- Instantiate DepthPro only ---
+    if name == "ml_depth_pro":
+        return MlDepthPro(device=device, **model_params)
 
     raise ValueError(f"Unknown Depth model: {name}")
-
-    
