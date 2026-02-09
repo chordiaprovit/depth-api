@@ -1,40 +1,97 @@
 {
   "openapi": "3.0.3",
-  "info": { "title": "Depth Estimation API", "version": "1.0.0" },
+  "info": {
+    "title": "Depth Estimation API",
+    "version": "1.1.0"
+  },
   "servers": [{ "url": "/" }],
   "paths": {
     "/health": {
       "get": {
         "summary": "Health check",
-        "responses": { "200": { "description": "OK" } }
+        "responses": {
+          "200": { "description": "OK" }
+        }
       }
     },
     "/model_info": {
       "get": {
         "summary": "Model metadata",
         "security": [{ "ApiKeyAuth": [] }],
-        "responses": { "200": { "description": "OK" }, "401": { "description": "Unauthorized" } }
+        "responses": {
+          "200": { "description": "OK" },
+          "401": { "description": "Unauthorized" }
+        }
       }
     },
     "/estimate_depth": {
       "post": {
-        "summary": "Estimate depth",
+        "summary": "Estimate depth at a point or bounding box",
         "security": [{ "ApiKeyAuth": [] }],
         "requestBody": {
           "required": true,
           "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["image", "x", "y"],
+                "properties": {
+                  "image": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Input image (JPG/PNG)"
+                  },
+                  "x": {
+                    "type": "integer",
+                    "example": 120,
+                    "description": "X coordinate"
+                  },
+                  "y": {
+                    "type": "integer",
+                    "example": 80,
+                    "description": "Y coordinate"
+                  },
+                  "point_box": {
+                    "type": "integer",
+                    "example": 8,
+                    "description": "Half-size of sampling box around (x,y)"
+                  },
+                  "bounding_box": {
+                    "type": "string",
+                    "example": "{\"x1\":10,\"y1\":10,\"x2\":200,\"y2\":200}",
+                    "description": "Optional bounding box JSON (overrides x/y)"
+                  }
+                }
+              }
+            },
             "application/json": {
               "schema": {
                 "type": "object",
+                "required": ["image", "bounding_box"],
                 "properties": {
-                  "image_base64": { "type": "string" }
-                },
-                "required": ["image_base64"]
+                  "image": {
+                    "type": "string",
+                    "description": "Base64-encoded image"
+                  },
+                  "bounding_box": {
+                    "type": "object",
+                    "properties": {
+                      "x1": { "type": "integer" },
+                      "y1": { "type": "integer" },
+                      "x2": { "type": "integer" },
+                      "y2": { "type": "integer" }
+                    }
+                  }
+                }
               }
             }
           }
         },
-        "responses": { "200": { "description": "OK" }, "401": { "description": "Unauthorized" } }
+        "responses": {
+          "200": { "description": "Depth estimated" },
+          "400": { "description": "Bad request" },
+          "401": { "description": "Unauthorized" }
+        }
       }
     }
   },
