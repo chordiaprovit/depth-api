@@ -20,7 +20,15 @@ RUN pip uninstall -y depth_pro depth-pro || true
 RUN pip install --no-cache-dir -r requirements.api.txt
 
 # Fail the build if Apple Depth Pro isn't importable
-RUN python -c "import depth_pro; print('depth_pro OK:', depth_pro.__file__); assert hasattr(depth_pro, 'DepthProConfig')"
+RUN pip install --no-cache-dir --upgrade --force-reinstall git+https://github.com/apple/ml-depth-pro.git
+RUN pip uninstall -y depth_pro depth-pro || true
+
+RUN python - <<'PY'
+import depth_pro, sys
+print("depth_pro path:", getattr(depth_pro, "__file__", None))
+print("has DepthProConfig:", hasattr(depth_pro, "DepthProConfig"))
+assert hasattr(depth_pro, "DepthProConfig"), "Wrong depth_pro installed"
+PY
 
 # Copy app code only (no model artifacts)
 COPY depth_service.py /app/
