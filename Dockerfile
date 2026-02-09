@@ -13,14 +13,18 @@ COPY requirements.api.txt ./requirements.api.txt
 
 # Remove any PyPI name-collision packages just in case
 RUN pip uninstall -y depth_pro depth-pro || true
-
 RUN rm -rf /usr/local/lib/python3.10/site-packages/depth_pro* || true
+
+# Install normal deps
 RUN pip install --no-cache-dir -r requirements.api.txt
+
+# Install Apple Depth Pro (deterministic)
 RUN git clone --depth 1 https://github.com/apple/ml-depth-pro.git /tmp/ml-depth-pro \
  && pip install --no-cache-dir --upgrade --force-reinstall /tmp/ml-depth-pro \
  && rm -rf /tmp/ml-depth-pro
 
-RUN python -c "import depth_pro; print('depth_pro path:', depth_pro.__file__); print('dir has DepthProConfig:', 'DepthProConfig' in dir(depth_pro)); assert 'DepthProConfig' in dir(depth_pro)"
+# Verify Apple Depth Pro is usable
+RUN python -c "import depth_pro; print('depth_pro path:', depth_pro.__file__); print('has create_model_and_transforms:', hasattr(depth_pro,'create_model_and_transforms')); assert hasattr(depth_pro,'create_model_and_transforms')"
 
 COPY depth_service.py /app/
 COPY openapi.json /app/

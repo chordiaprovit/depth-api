@@ -12,5 +12,3 @@ flask-swagger-ui>=4.11.1
 timm>=0.9.12
 torch>=2.1.0
 
-# Apple ML Depth Pro (installs the `depth_pro` package)
-git+https://github.com/apple/ml-depth-pro.git
