@@ -5,7 +5,7 @@ import os
 
 import cv2
 import numpy as np
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory, Response
 
 from src.models.ml_depth_pro import MlDepthPro
 
@@ -32,7 +32,8 @@ def require_api_key():
 
 @app.before_request
 def auth_middleware():
-    if request.path in ["/health", "/docs", "/openapi.json"]:
+    p = request.path or ""
+    if p == "/health" or p.startswith("/docs") or p == "/openapi.json":
         return
     if not require_api_key():
         return jsonify({"error": "Unauthorized"}), 401
@@ -54,6 +55,39 @@ def load_model():
 def health():
     return jsonify({"status": "ok"})
 
+@app.route("/openapi.json", methods=["GET"])
+def openapi_spec():
+    # Serves the openapi.json file that lives next to this depth_service.py file
+    return send_from_directory(os.path.dirname(__file__), "openapi.json")
+
+
+@app.route("/docs", methods=["GET"])
+def docs():
+    # Swagger UI served via CDN (no local static files needed)
+    html = """
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Depth Estimation API - Swagger UI</title>
+  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css" />
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+  <script>
+    window.onload = () => {
+      SwaggerUIBundle({
+        url: "/openapi.json",
+        dom_id: "#swagger-ui",
+        persistAuthorization: true
+      });
+    };
+  </script>
+</body>
+</html>
+"""
+    return Response(html, mimetype="text/html")
 
 @app.route("/model_info", methods=["GET"])
 def model_info():
