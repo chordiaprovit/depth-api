@@ -55,13 +55,13 @@ def load_model():
 def health():
     return jsonify({"status": "ok"})
 
-@app.route("/openapi.json", methods=["GET"])
+@app.route("/openapi.json", methods=["GET"], strict_slashes=False)
 def openapi_spec():
     # Serves the openapi.json file that lives next to this depth_service.py file
     return send_from_directory(os.path.dirname(__file__), "openapi.json")
 
 
-@app.route("/docs", methods=["GET"])
+@app.route("/docs", methods=["GET"], strict_slashes=False)
 def docs():
     # Swagger UI served via CDN (no local static files needed)
     html = """
