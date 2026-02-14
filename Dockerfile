@@ -18,10 +18,16 @@ RUN rm -rf /usr/local/lib/python3.10/site-packages/depth_pro* || true
 # Install normal deps
 RUN pip install --no-cache-dir -r requirements.api.txt
 
+# Cache MiDaS_small weights during build so runtime doesn't download (ACA cold-start win)
+ENV TORCH_HOME=/app/.torch
+RUN mkdir -p $TORCH_HOME \
+ && python -c "import torch; torch.hub.load('intel-isl/MiDaS','MiDaS_small'); torch.hub.load('intel-isl/MiDaS','transforms')"
+
 # Install Apple Depth Pro (deterministic)
 RUN git clone --depth 1 https://github.com/apple/ml-depth-pro.git /tmp/ml-depth-pro \
  && pip install --no-cache-dir --upgrade --force-reinstall /tmp/ml-depth-pro \
  && rm -rf /tmp/ml-depth-pro
+
 
 # Verify Apple Depth Pro is usable
 RUN python -c "import depth_pro; print('depth_pro path:', depth_pro.__file__); print('has create_model_and_transforms:', hasattr(depth_pro,'create_model_and_transforms')); assert hasattr(depth_pro,'create_model_and_transforms')"

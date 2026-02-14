@@ -11,4 +11,5 @@ requests>=2.31.0
 flask-swagger-ui>=4.11.1
 timm>=0.9.12
 torch>=2.1.0
+torchvision>=0.16.0
 
